@@ -12,7 +12,7 @@ trainer:
     init_args:
       name: sen1floods11_thor_timm_S2_S1_2880m
       project: terratorch
-      save_dir: /nr/bamjo/projects/fm4cs/usr/tforgaard/terratorch_results
+      save_dir: ./terratorch_results
   callbacks:
     - class_path: RichProgressBar
     - class_path: LearningRateMonitor
@@ -31,7 +31,7 @@ trainer:
   accumulate_grad_batches: 1
   log_every_n_steps: 1
   enable_checkpointing: true
-  default_root_dir: /nr/bamjo/projects/fm4cs/usr/tforgaard/terratorch_results/results
+  default_root_dir: ./terratorch_results
 data:
   class_path: terratorch.datamodules.GenericMultiModalDataModule
   init_args:
@@ -46,22 +46,21 @@ data:
 
     # Data roots are defined as dicts with modalities as keys
     train_data_root:
-      S2L2A: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/S2Hand/
-      S1: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/S1Hand/
-    train_label_data_root: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/LabelHand/
+      S2L2A: sen1floods11_v1.1/data/S2L1CHand
+      S1: sen1floods11_v1.1/data/S1GRDHand
+    train_label_data_root: sen1floods11_v1.1/data/LabelHand
     val_data_root:
-      S2L2A: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/S2Hand/
-      S1: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/S1Hand/
-    val_label_data_root: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/LabelHand/
+      S2L2A: sen1floods11_v1.1/data/S2L1CHand
+      S1: sen1floods11_v1.1/data/S1GRDHand
+    val_label_data_root: sen1floods11_v1.1/data/LabelHand
     test_data_root:
-      S2L2A: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/S2Hand/
-      S1: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/S1Hand/
-    test_label_data_root: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/data/flood_events/HandLabeled/LabelHand/
+      S2L2A: sen1floods11_v1.1/data/S2L1CHand
+      S1: sen1floods11_v1.1/data/S1GRDHand
+    test_label_data_root: sen1floods11_v1.1/data/LabelHand
 
-    # these must be obtained by running terratorch/examples/scripts/convert_sen1floods11_splits.py on the original split csv files
-    train_split: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/splits/flood_handlabeled/flood_train_data.txt
-    test_split: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/splits/flood_handlabeled/flood_test_data.txt
-    val_split: /nr/bamjo/projects/fm4cs/data/sen1floods/v1.1/splits/flood_handlabeled/flood_valid_data.txt
+    train_split: sen1floods11_v1.1/splits/flood_train_data.txt
+    test_split: sen1floods11_v1.1/splits/flood_test_data.txt
+    val_split: sen1floods11_v1.1/splits/flood_valid_data.txt
 
     allow_substring_file_names: True
     image_grep:
@@ -167,10 +166,9 @@ model:
       backbone_merge_features: concat
       backbone_rescale_features: null
       backbone_encoders:
-        - terratorch_thor_vit_base_encoder_alibi_patch_size_embed_v1:
+        - thor_v1_base:
             freeze_backbone: true
             backbone_pretrained: true
-            backbone_ckpt: /nr/bamjo/projects/fm4cs/usr/tforgaard/fm4cs_results/thor/thor_v1_vit_base.pt
             backbone_model_ckpt_type: encoder
             backbone_return_channel_params: true
             backbone_input_params:
