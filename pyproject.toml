@@ -5,7 +5,7 @@ description = "THOR extension for TerraTorch"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "terratorch>=1.2.1",
+    "terratorch==1.2.1",
     "thor @ git+https://github.com/FM4CS/THOR@v1.0.2",
 ]
 
@@ -20,7 +20,10 @@ include = ["thor_terratorch_ext*"]
 
 [dependency-groups]
 dev = [
+    "gdown>=5.2.1",
+    "ipykernel>=7.2.0",
     "ipython>=8.37.0",
+    "ipywidgets>=8.1.8",
     "ruff>=0.14.8",
 ]
 log = [
