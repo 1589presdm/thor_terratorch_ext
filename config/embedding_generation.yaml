@@ -106,8 +106,7 @@ model:
         # - CIRRUS # Not present in THOR
         - SWIR_1
         - SWIR_2
-      model_ckpt_type: encoder
-      return_channel_params: true
+      merge_method: concat
       input_params:
         ground_covers: [2880]
         flexivit_patch_size_seqs: 

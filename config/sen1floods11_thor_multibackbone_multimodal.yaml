@@ -168,9 +168,8 @@ model:
       backbone_encoders:
         - thor_v1_base:
             freeze_backbone: true
+            backbone_merge_method: concat
             backbone_pretrained: true
-            backbone_model_ckpt_type: encoder
-            backbone_return_channel_params: true
             backbone_input_params:
               ground_covers: [2880]
               flexivit_patch_size_seqs:
@@ -190,8 +189,6 @@ model:
               # - CIRRUS # Not present in THOR
               - SWIR_1
               - SWIR_2
-            necks:
-              - name: THORGroupReshapeTokensToImage
         - vit_small_patch16_224.dino:
             out_indices: [-1]
             in_chans: 2
