@@ -106,7 +106,7 @@ model:
         # - CIRRUS # Not present in THOR
         - SWIR_1
         - SWIR_2
-      merge_method: mean
+      merge_method: concat
       input_params:
         ground_covers: [2880]
         flexivit_patch_size_seqs: 

@@ -81,7 +81,7 @@ model:
     model_args:
       backbone_pretrained: true
       backbone: thor_v1_base
-      backbone_merge_method: mean
+      backbone_merge_method: concat
       backbone_input_params:
         ground_covers: [2880]
         flexivit_patch_size_seqs: 

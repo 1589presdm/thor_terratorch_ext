@@ -655,7 +655,7 @@ class THORGroupReshapeTokensToImage(Neck):
                 self.highest_num_patch = highest_num_patch
         else:
             msg = (
-                "THORGroupReshapeTokensToImage requires channel_params to be passed during forward"
+                "THORGroupReshapeTokensToImage requires channel_params to be passed during forward "
                 "please set return_channel_params=True in the THOREncoderWrapper"
             )
             raise ValueError(msg)
