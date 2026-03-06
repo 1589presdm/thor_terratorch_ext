@@ -6,17 +6,12 @@ trainer:
   devices: auto
   num_nodes: 1
   precision: 16-mixed
-  # logger:
-  #   class_path: TensorBoardLogger
-  #   init_args:
-  #     save_dir: ./tensorboard_logs
-  #     name: mire_thor_S2_multiclass
   logger:
     class_path: WandbLogger
     init_args:
       name: mire_thor_S2_multiclass
       project: terratorch
-      save_dir: /nr/bamjo/projects/fm4cs/usr/tforgaard/terratorch_results
+      save_dir: ./terratorch_results
   callbacks:
     - class_path: RichProgressBar
     - class_path: LearningRateMonitor
@@ -35,7 +30,7 @@ trainer:
   accumulate_grad_batches: 1
   log_every_n_steps: 1
   enable_checkpointing: true
-  default_root_dir: /nr/bamjo/projects/fm4cs/usr/tforgaard/terratorch_results/results
+  default_root_dir: ./terratorch_results
 data:
   class_path: thor_terratorch_ext.datamodules.mire_map_module.MireMapNonGeoDataModule
   init_args:
@@ -55,7 +50,7 @@ data:
       # - CIRRUS
       - SWIR_1
       - SWIR_2
-    data_root: /nr/bamjo/jodata6/pro/know_earth/data/nibio_mire_data/crops_1024_v2
+    data_root: ./know_earth/data/nibio_mire_data/crops_1024_v2
     mode: multiclass
     # num_classes: 6
     no_label_replace: 255
