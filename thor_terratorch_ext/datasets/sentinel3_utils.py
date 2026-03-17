@@ -27,7 +27,7 @@ if TYPE_CHECKING:
 
 # ── Band constants ─────────────────────────────────────────────────────────────
 
-#: Mean solar spectral irradiance for OLCI bands Oa01–Oa21, in mW m⁻² nm⁻¹.
+#: Mean solar spectral irradiance for OLCI bands Oa01-Oa21, in mW m⁻² nm⁻¹.
 #: Tabulated from instrument_data.nc (mean over all detectors, typical scene).
 OLCI_SOLAR_FLUX: list[float] = [
     1500.96,
@@ -53,7 +53,7 @@ OLCI_SOLAR_FLUX: list[float] = [
     684.75,
 ]
 
-#: Mean solar spectral irradiance for SLSTR bands S1–S6, in mW m⁻² nm⁻¹.
+#: Mean solar spectral irradiance for SLSTR bands S1-S6, in mW m⁻² nm⁻¹.
 #: Used as fallback when per-detector irradiance is not available.
 SLSTR_SOLAR_FLUX: list[float] = [1798.94, 1488.56, 936.94, 358.14, 240.20, 75.82]
 
