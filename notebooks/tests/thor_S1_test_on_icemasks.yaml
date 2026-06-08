@@ -1,20 +1,14 @@
 seed_everything: 0
-custom_modules_path: ./thor_terratorch_ext 
+custom_modules_path: ./thor_terratorch_ext
+
 trainer:
   accelerator: gpu
   strategy: auto
   devices: auto
   num_nodes: 1
   precision: 16-mixed
-  logger: true 
-  # logger:
-  #   class_path: WandbLogger
-  #   init_args:
-  #     name: sen1floods11_thor_S1_2880m
-  #     project: terratorch
-  #     save_dir: ./terratorch_results
+  logger: true
   callbacks:
-    #- class_path: RichProgressBar
     - class_path: lightning.pytorch.callbacks.LearningRateMonitor
       init_args:
         logging_interval: epoch
@@ -27,10 +21,10 @@ trainer:
         verbose: true
     - class_path: lightning.pytorch.callbacks.ModelCheckpoint
       init_args:
-        dirpath: /home/predm/venvs/thor_terratorch_ext/notebooks/tests/terratorch_results/yaml_test_S1/checkpoints
+        dirpath: /home/predm/venvs/thor_terratorch_ext/notebooks/tests/terratorch_results/yaml_test_S1_clean_run1/checkpoints
         monitor: val/mIoU
         mode: max
-        save_top_k: 1 
+        save_top_k: 1
         save_last: true
         filename: epoch{epoch:03d}
         auto_insert_metric_name: false
@@ -40,36 +34,62 @@ trainer:
   accumulate_grad_batches: 1
   log_every_n_steps: 1
   enable_checkpointing: true
-  default_root_dir: /home/predm/venvs/thor_terratorch_ext/notebooks/tests/terratorch_results/yaml_test_S1
+  default_root_dir: /home/predm/venvs/thor_terratorch_ext/notebooks/tests/terratorch_results/yaml_test_S1_clean_run1
+
 data:
-  class_path: terratorch.datamodules.GenericNonGeoSegmentationDataModule
+  class_path: terratorch.datamodules.GenericMultiModalDataModule
   init_args:
+    task: "segmentation"
     batch_size: 4
     num_workers: 0
-    dataset_bands:
-      - IW_HH
-      - IW_HV
+
+    modalities:
+      - S1
+
+    rgb_modality: S1
     rgb_indices: [0, 1, 1]
-    train_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
+
+    train_data_root:
+      S1: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
     train_label_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_mask
-    val_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
+
+    val_data_root:
+      S1: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
     val_label_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_mask
-    test_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
+
+    test_data_root:
+      S1: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
     test_label_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_mask
+
     train_split: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/splits/train.txt
-    test_split: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/splits/test.txt
     val_split: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/splits/val.txt
-    img_grep: "*.tif"
+    test_split: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/splits/test.txt
+
+    allow_substring_file_names: true
+
+    image_grep:
+      S1: "*.tif"
     label_grep: "*_mask.tif"
+
     no_label_replace: -1
     no_data_replace: 0
+    concat_bands: true
     check_stackability: false
+
+    dataset_bands:
+      S1:
+        - EW_HH_80
+        - EW_HV_80
+
     means:
-      -  139.39720896670693 
-      -  126.94754253186677
+      S1:
+        - 141.93311161242033
+        - 122.23673553466797
+
     stds:
-      - 54.633412799558464
-      - 47.87104079192851
+      S1:
+        - 53.95834372765628
+        - 47.42699242760452
 
     num_classes: 2
 
@@ -89,30 +109,26 @@ model:
     model_args:
       backbone_pretrained: true
       backbone: thor_v1_base
-      backbone_merge_method: mean #concat
+      backbone_merge_method: mean
       backbone_input_params:
-        ground_covers: [2880]
+        ground_covers: [23040]
         flexivit_patch_size_seqs:
           - 8
       backbone_out_indices: [-1]
       backbone_model_bands:
-        - IW_HH
-        - IW_HV
+        - EW_HH_80
+        - EW_HV_80
       decoder: FCNDecoder
       decoder_channels: 256
-      #decoder_num_convs: 4
       num_classes: 2
       head_dropout: 0.1
-      #head_channel_list:
-        #- 256
+
     loss: ce
     ignore_index: -1
-    #class_weights:
-      #- 0.3
-      #- 0.7
     freeze_backbone: true
     freeze_decoder: false
     model_factory: EncoderDecoderFactory
+
     tiled_inference_parameters:
       h_crop: 288
       h_stride: 256
@@ -120,15 +136,17 @@ model:
       w_stride: 256
       average_patches: true
       batch_size: 4
+
 optimizer:
   class_path: torch.optim.AdamW
   init_args:
     lr: 2e-5
     weight_decay: 0.05
+
 lr_scheduler:
   class_path: lightning.pytorch.cli.ReduceLROnPlateau
   init_args:
-    monitor: val/mIoU  
+    monitor: val/mIoU
     mode: max
     factor: 0.5
     patience: 10
