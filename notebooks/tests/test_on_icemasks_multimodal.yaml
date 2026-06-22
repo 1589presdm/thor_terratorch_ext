@@ -1,0 +1,181 @@
+seed_everything: 0
+custom_modules_path: ./thor_terratorch_ext 
+trainer:
+  accelerator: gpu
+  strategy: auto
+  devices: auto
+  num_nodes: 1
+  precision: 16-mixed
+  logger: true 
+  # logger:
+  #   class_path: WandbLogger
+  #   init_args:
+  #     name: sen1floods11_thor_S1_2880m
+  #     project: terratorch
+  #     save_dir: ./terratorch_results
+  callbacks:
+    #- class_path: RichProgressBar
+    - class_path: lightning.pytorch.callbacks.LearningRateMonitor
+      init_args:
+        logging_interval: epoch
+    - class_path: lightning.pytorch.callbacks.EarlyStopping
+      init_args:
+        monitor: val/mIoU
+        patience: 30
+        mode: max
+        check_finite: false
+        verbose: true
+    - class_path: lightning.pytorch.callbacks.ModelCheckpoint
+      init_args:
+        dirpath: /home/predm/venvs/thor_terratorch_ext/notebooks/tests/terratorch_results/yaml_test_S1_doppler_run0/checkpoints
+        monitor: val/mIoU
+        mode: max
+        save_top_k: 1 
+        save_last: true
+        filename: epoch{epoch:03d}
+        auto_insert_metric_name: false
+
+  max_epochs: 200
+  check_val_every_n_epoch: 1
+  accumulate_grad_batches: 1
+  log_every_n_steps: 1
+  enable_checkpointing: true
+  default_root_dir: /home/predm/venvs/thor_terratorch_ext/notebooks/tests/terratorch_results/yaml_test_S1_doppler_run5
+data:
+  class_path: terratorch.datamodules.GenericMultiModalDataModule
+  init_args:
+    task: "segmentation"
+    batch_size: 4
+    num_workers: 0
+    modalities: 
+      - S1
+      - DOPPLER
+    rgb_modality: S1
+    rgb_indices: [0, 1, 1] 
+
+
+    train_data_root:
+      S1:  /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
+      DOPPLER: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_doppler
+    train_label_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_mask
+    val_data_root:
+      S1: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
+      DOPPLER: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_doppler
+    val_label_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_mask
+    test_data_root:
+      S1: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_images
+      DOPPLER: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_doppler
+    test_label_data_root: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/tif_mask
+
+    train_split: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/splits/train.txt
+    test_split: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/splits/test.txt
+    val_split: /home/predm/venvs/thor_terratorch_ext/skimage_segmentation_sorted/splits/val.txt
+
+    allow_substring_file_names: True
+    image_grep:
+      S1: "*.tif"
+      DOPPLER: "*_doppler.tif"
+    label_grep: "__mask.tif"
+    no_label_replace: -1
+    no_data_replace: 0
+    concat_bands: true 
+    check_stackability: false
+    dataset_bands:
+      S1:
+        - EW_HH
+        - EW_HV
+      DOPPLER:
+         - DOPPLER
+
+ 
+    means:
+      S1:
+        - 141.93311161242033
+        - 122.23673553466797
+      DOPPLER:
+        - 139.4596141614412
+
+    stds:
+      S1:
+        - 53.95834372765628
+        - 47.42699242760452
+      DOPPLER:
+        - 40.77621061122129
+
+    num_classes: 2
+
+    train_transform:
+      - class_path: albumentations.RandomCrop
+        init_args:
+          height: 288
+          width: 288
+      - class_path: albumentations.D4
+      - class_path: albumentations.pytorch.transforms.ToTensorV2
+
+model:
+  class_path: terratorch.tasks.SemanticSegmentationTask
+  init_args:
+    tiled_inference_on_testing: true
+    tiled_inference_on_validation: true
+    model_args:
+      backbone: MultiBackboneWrapper
+      backbone_bands:
+        - EW_HH
+        - EW_HV
+        - DOPPLER
+      backbone_merge_features: concat
+      backbone_rescale_features: up
+      backbone_encoders:
+        - thor_v1_base:
+            freeze_backbone: true
+            backbone_merge_method: concat
+            backbone_pretrained: true
+            backbone_ground_cover: 2880
+            backbone_patch_sizes: 8
+            backbone_out_indices: [-1]
+            backbone_model_bands:
+              - EW_HH
+              - EW_HV
+        - vit_small_patch16_224.dino:
+             out_indices: [-1]
+             in_chans: 1
+             backbone_pretrained: true
+             backbone_dynamic_img_size: true
+             bands:
+              - DOPPLER
+              
+      decoder: FCNDecoder
+      decoder_channels: 256
+      #decoder_num_convs: 4
+      num_classes: 2
+      head_dropout: 0.1
+      #head_channel_list:
+        #- 256
+    loss: ce
+    ignore_index: -1
+    #class_weights:
+      #- 0.3
+      #- 0.7
+    freeze_backbone: false
+    freeze_decoder: false
+    model_factory: EncoderDecoderFactory
+    tiled_inference_parameters:
+      h_crop: 288
+      h_stride: 256
+      w_crop: 288
+      w_stride: 256
+      average_patches: true
+      batch_size: 4
+optimizer:
+  class_path: torch.optim.AdamW
+  init_args:
+    lr: 2e-5
+    weight_decay: 0.05
+lr_scheduler:
+  class_path: lightning.pytorch.cli.ReduceLROnPlateau
+  init_args:
+    monitor: val/mIoU  
+    mode: max
+    factor: 0.5
+    patience: 10
+    threshold: 1e-4
